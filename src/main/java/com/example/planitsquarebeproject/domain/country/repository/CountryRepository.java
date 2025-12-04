@@ -1,7 +1,7 @@
 package com.example.planitsquarebeproject.domain.country.repository;
 
 import com.example.planitsquarebeproject.domain.country.entity.Country;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CountryRepository extends CrudRepository<Country, String> {
+public interface CountryRepository extends JpaRepository<Country, String> {
 }
