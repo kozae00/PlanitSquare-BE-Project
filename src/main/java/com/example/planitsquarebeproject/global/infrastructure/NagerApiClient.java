@@ -1,6 +1,7 @@
 package com.example.planitsquarebeproject.global.infrastructure;
 
 import com.example.planitsquarebeproject.domain.country.dto.CountryDto;
+import com.example.planitsquarebeproject.domain.holiday.dto.HolidayApiDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,15 @@ public class NagerApiClient {
                 .uri("/AvailableCountries")
                 .retrieve()
                 .bodyToFlux(CountryDto.Response.class)
+                .collectList()
+                .block();
+    }
+
+    public List<HolidayApiDto.Response> getPublicHolidays(int year, String countryCode) {
+        return webClient.get()
+                .uri("/PublicHolidays/{year}/{country}", year, countryCode)
+                .retrieve()
+                .bodyToFlux(HolidayApiDto.Response.class)
                 .collectList()
                 .block();
     }
