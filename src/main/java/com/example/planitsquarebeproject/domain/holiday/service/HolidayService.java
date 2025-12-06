@@ -6,6 +6,7 @@ import com.example.planitsquarebeproject.domain.holiday.entity.Holiday;
 import com.example.planitsquarebeproject.domain.holiday.repository.HolidayRepository;
 import com.example.planitsquarebeproject.global.infrastructure.NagerApiClient;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class HolidayService {
@@ -44,11 +46,24 @@ public class HolidayService {
 
     @Transactional
     public void loadInitialData(List<Country> countries) {
+        log.info("공휴일 초기 데이터 로드 시작: {} 개 국가, 2020-2025년", countries.size());
+        
+        int totalLoaded = 0;
         for (Country country : countries) {
             for (int year = 2020; year <= 2025; year++) {
-                loadHolidays(year, country.getCountryCode());
+                try {
+                    List<Holiday> holidays = loadHolidays(year, country.getCountryCode());
+                    totalLoaded += holidays.size();
+                    log.debug("{} {}년 공휴일 로드 완료: {} 개", 
+                             country.getCountryCode(), year, holidays.size());
+                } catch (Exception e) {
+                    log.warn("{} {}년 공휴일 로드 실패: {}", 
+                            country.getCountryCode(), year, e.getMessage());
+                }
             }
         }
+        
+        log.info("공휴일 초기 데이터 로드 완료: 총 {} 개", totalLoaded);
     }
 
     public List<Holiday> search(int year, String countryCode) {
