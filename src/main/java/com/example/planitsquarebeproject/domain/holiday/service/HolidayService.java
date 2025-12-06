@@ -3,6 +3,7 @@ package com.example.planitsquarebeproject.domain.holiday.service;
 import com.example.planitsquarebeproject.domain.country.entity.Country;
 import com.example.planitsquarebeproject.domain.holiday.dto.HolidayApiDto;
 import com.example.planitsquarebeproject.domain.holiday.entity.Holiday;
+import com.example.planitsquarebeproject.domain.holiday.exception.HolidayNotFoundException;
 import com.example.planitsquarebeproject.domain.holiday.repository.HolidayRepository;
 import com.example.planitsquarebeproject.global.infrastructure.NagerApiClient;
 import lombok.RequiredArgsConstructor;
@@ -25,23 +26,33 @@ public class HolidayService {
 
     @Transactional
     public List<Holiday> loadHolidays(int year, String countryCode) {
+        validateYearAndCountryCode(year, countryCode);
+        
+        try {
+            List<HolidayApiDto.Response> apiHolidays = nagerApiClient.getPublicHolidays(year, countryCode);
 
-        List<HolidayApiDto.Response> apiHolidays = nagerApiClient.getPublicHolidays(year, countryCode);
+            if (apiHolidays == null || apiHolidays.isEmpty()) {
+                log.warn("{}년 {}의 공휴일 데이터가 없습니다.", year, countryCode);
+                return List.of();
+            }
 
+            List<Holiday> entities = apiHolidays.stream()
+                    .map(dto -> Holiday.builder()
+                            .year(year)
+                            .countryCode(countryCode)
+                            .date(LocalDate.parse(dto.getDate()))
+                            .name(dto.getName())
+                            .localName(dto.getLocalName())
+                            .type(dto.getTypes().get(0))
+                            .build())
+                    .toList();
 
-        List<Holiday> entities = apiHolidays .stream()
-                .map(dto -> Holiday.builder()
-                        .year(year)
-                        .countryCode(countryCode)
-                        .date(LocalDate.parse(dto.getDate()))
-                        .name(dto.getName())
-                        .localName(dto.getLocalName())
-                        .type(dto.getTypes().get(0))
-                        .build())
-                .toList();
-
-        holidayRepository.deleteAllByYearAndCountryCode(year, countryCode);
-        return holidayRepository.saveAll(entities);
+            holidayRepository.deleteAllByYearAndCountryCode(year, countryCode);
+            return holidayRepository.saveAll(entities);
+        } catch (Exception e) {
+            log.error("공휴일 데이터 로드 실패: {}년 {}", year, countryCode, e);
+            throw e;
+        }
     }
 
     @Transactional
@@ -67,14 +78,38 @@ public class HolidayService {
     }
 
     public List<Holiday> search(int year, String countryCode) {
-        return holidayRepository.findByYearAndCountryCode(year, countryCode);
+        validateYearAndCountryCode(year, countryCode);
+        
+        List<Holiday> holidays = holidayRepository.findByYearAndCountryCode(year, countryCode);
+        
+        if (holidays.isEmpty()) {
+            throw new HolidayNotFoundException(year, countryCode);
+        }
+        
+        return holidays;
     }
 
     public List<Holiday> searchBetween(LocalDate from, LocalDate to) {
+        if (from.isAfter(to)) {
+            throw new IllegalArgumentException("시작 날짜가 종료 날짜보다 늦을 수 없습니다.");
+        }
+        
         return holidayRepository.findByDateBetween(from, to);
     }
 
+    @Transactional
     public void delete(int year, String countryCode) {
+        validateYearAndCountryCode(year, countryCode);
         holidayRepository.deleteAllByYearAndCountryCode(year, countryCode);
+    }
+    
+    private void validateYearAndCountryCode(int year, String countryCode) {
+        if (year < 1900 || year > 2100) {
+            throw new IllegalArgumentException("유효하지 않은 연도입니다: " + year);
+        }
+        
+        if (countryCode == null || countryCode.trim().isEmpty()) {
+            throw new IllegalArgumentException("국가 코드는 필수입니다.");
+        }
     }
 }
