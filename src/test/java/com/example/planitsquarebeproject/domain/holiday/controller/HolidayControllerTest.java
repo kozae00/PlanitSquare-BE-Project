@@ -4,10 +4,12 @@ import com.example.planitsquarebeproject.domain.holiday.dto.HolidayDto;
 import com.example.planitsquarebeproject.domain.holiday.service.HolidayService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,19 +21,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(HolidayController.class)
+@ExtendWith(MockitoExtension.class)
 class HolidayControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
+    @Mock
     private HolidayService holidayService;
+
+    @InjectMocks
+    private HolidayController holidayController;
+
+    private MockMvc mockMvc;
 
     @Test
     @DisplayName("GET /api/v1/holidays - 공휴일 조회 API 테스트")
     void search() throws Exception {
         // given
+        mockMvc = MockMvcBuilders.standaloneSetup(holidayController).build();
+        
         List<HolidayDto.Response> holidays = List.of(
                 HolidayDto.Response.builder()
                         .id(1L)
@@ -61,6 +67,8 @@ class HolidayControllerTest {
     @DisplayName("GET /api/v1/holidays/range - 기간별 공휴일 조회 API 테스트")
     void searchRange() throws Exception {
         // given
+        mockMvc = MockMvcBuilders.standaloneSetup(holidayController).build();
+        
         List<HolidayDto.Response> holidays = List.of(
                 HolidayDto.Response.builder()
                         .id(1L)
@@ -88,14 +96,16 @@ class HolidayControllerTest {
     @Test
     @DisplayName("DELETE /api/v1/holidays - 공휴일 삭제 API 테스트")
     void deleteHoliday() throws Exception {
+        // given
+        mockMvc = MockMvcBuilders.standaloneSetup(holidayController).build();
+        
         // when & then
         mockMvc.perform(delete("/api/v1/holidays")
                         .param("year", "2024")
                         .param("country", "KR"))
                 .andDo(print())
-                .andExpect(status().isNoContent()); // 204 응답 확인
+                .andExpect(status().isNoContent());
 
-        // Service 메서드 호출 확인
         verify(holidayService).delete(2024, "KR");
     }
 }
