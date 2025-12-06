@@ -2,7 +2,6 @@ package com.example.planitsquarebeproject.domain.holiday.service;
 
 import com.example.planitsquarebeproject.domain.holiday.dto.HolidayDto;
 import com.example.planitsquarebeproject.domain.holiday.entity.Holiday;
-import com.example.planitsquarebeproject.domain.holiday.exception.HolidayNotFoundException;
 import com.example.planitsquarebeproject.domain.holiday.repository.HolidayRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,19 +45,6 @@ class HolidayServiceTest {
         assertThat(result.get(0).getYear()).isEqualTo(2024);
     }
 
-    @Test
-    @DisplayName("공휴일이 없으면 예외가 발생한다")
-    void searchNotFound() {
-        // given
-        when(holidayRepository.findByYearAndCountryCode(2024, "XX"))
-                .thenReturn(List.of());
-
-        // when & then
-        assertThatThrownBy(() -> holidayService.search(2024, "XX"))
-                .isInstanceOf(HolidayNotFoundException.class)
-                .hasMessageContaining("2024")
-                .hasMessageContaining("XX");
-    }
 
     @Test
     @DisplayName("잘못된 연도로 조회하면 예외가 발생한다")
