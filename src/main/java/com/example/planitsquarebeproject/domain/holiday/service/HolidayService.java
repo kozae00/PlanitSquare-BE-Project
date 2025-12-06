@@ -2,8 +2,8 @@ package com.example.planitsquarebeproject.domain.holiday.service;
 
 import com.example.planitsquarebeproject.domain.country.entity.Country;
 import com.example.planitsquarebeproject.domain.holiday.dto.HolidayApiDto;
+import com.example.planitsquarebeproject.domain.holiday.dto.HolidayDto;
 import com.example.planitsquarebeproject.domain.holiday.entity.Holiday;
-import com.example.planitsquarebeproject.domain.holiday.exception.HolidayNotFoundException;
 import com.example.planitsquarebeproject.domain.holiday.repository.HolidayRepository;
 import com.example.planitsquarebeproject.global.infrastructure.NagerApiClient;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 
-import static java.util.stream.Collectors.toList;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -25,7 +23,7 @@ public class HolidayService {
     private final NagerApiClient nagerApiClient;
 
     @Transactional
-    public List<Holiday> loadHolidays(int year, String countryCode) {
+    public List<HolidayDto.Response> loadHolidays(int year, String countryCode) {
         validateYearAndCountryCode(year, countryCode);
         
         try {
@@ -48,7 +46,11 @@ public class HolidayService {
                     .toList();
 
             holidayRepository.deleteAllByYearAndCountryCode(year, countryCode);
-            return holidayRepository.saveAll(entities);
+            List<Holiday> savedHolidays = holidayRepository.saveAll(entities);
+            
+            return savedHolidays.stream()
+                    .map(HolidayDto.Response::from)
+                    .toList();
         } catch (Exception e) {
             log.error("공휴일 데이터 로드 실패: {}년 {}", year, countryCode, e);
             throw e;
@@ -63,7 +65,7 @@ public class HolidayService {
         for (Country country : countries) {
             for (int year = 2020; year <= 2025; year++) {
                 try {
-                    List<Holiday> holidays = loadHolidays(year, country.getCountryCode());
+                    List<HolidayDto.Response> holidays = loadHolidays(year, country.getCountryCode());
                     totalLoaded += holidays.size();
                     log.debug("{} {}년 공휴일 로드 완료: {} 개", 
                              country.getCountryCode(), year, holidays.size());
@@ -77,24 +79,26 @@ public class HolidayService {
         log.info("공휴일 초기 데이터 로드 완료: 총 {} 개", totalLoaded);
     }
 
-    public List<Holiday> search(int year, String countryCode) {
+    public List<HolidayDto.Response> search(int year, String countryCode) {
         validateYearAndCountryCode(year, countryCode);
         
         List<Holiday> holidays = holidayRepository.findByYearAndCountryCode(year, countryCode);
-        
-        if (holidays.isEmpty()) {
-            throw new HolidayNotFoundException(year, countryCode);
-        }
-        
-        return holidays;
+
+        return holidays.stream()
+                .map(HolidayDto.Response::from)
+                .toList();
     }
 
-    public List<Holiday> searchBetween(LocalDate from, LocalDate to) {
+    public List<HolidayDto.Response> searchBetween(LocalDate from, LocalDate to) {
         if (from.isAfter(to)) {
             throw new IllegalArgumentException("시작 날짜가 종료 날짜보다 늦을 수 없습니다.");
         }
         
-        return holidayRepository.findByDateBetween(from, to);
+        List<Holiday> holidays = holidayRepository.findByDateBetween(from, to);
+        
+        return holidays.stream()
+                .map(HolidayDto.Response::from)
+                .toList();
     }
 
     @Transactional

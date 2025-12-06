@@ -2,10 +2,8 @@ package com.example.planitsquarebeproject.domain.country.service;
 
 import com.example.planitsquarebeproject.domain.country.dto.CountryDto;
 import com.example.planitsquarebeproject.domain.country.entity.Country;
-import com.example.planitsquarebeproject.domain.country.exception.CountryNotFoundException;
 import com.example.planitsquarebeproject.domain.country.repository.CountryRepository;
 import com.example.planitsquarebeproject.global.infrastructure.NagerApiClient;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,7 +20,7 @@ public class CountryService {
     private final CountryRepository countryRepository;
 
     @Transactional
-    public List<Country> loadAllCountries() {
+    public List<CountryDto.Response> loadAllCountries() {
         log.info("외부 API에서 국가 데이터 가져오는 중...");
         
         try {
@@ -41,25 +39,35 @@ public class CountryService {
             countryRepository.saveAll(entities);
             log.info("데이터베이스에 {} 개 국가 저장 완료", entities.size());
             
-            return entities;
+            return entities.stream()
+                    .map(CountryDto.Response::from)
+                    .toList();
         } catch (Exception e) {
             log.error("국가 데이터 로드 실패", e);
             throw e;
         }
     }
 
-    public List<Country> getAll() {
+    public List<CountryDto.Response> getAll() {
         List<Country> countries = countryRepository.findAll();
         
         if (countries.isEmpty()) {
             log.warn("데이터베이스에 국가 데이터가 없습니다.");
         }
         
-        return countries;
+        return countries.stream()
+                .map(CountryDto.Response::from)
+                .toList();
     }
     
-    public Country getByCode(String countryCode) {
-        return countryRepository.findById(countryCode)
-                .orElseThrow(() -> new CountryNotFoundException(countryCode));
+    public CountryDto.Response getByCode(String countryCode) {
+        Country country = countryRepository.findById(countryCode)
+                .orElseThrow(() -> new IllegalArgumentException("해당 국가 코드를 가진 국가가 없습니다: " + countryCode));
+        
+        return CountryDto.Response.from(country);
+    }
+
+    public List<Country> getAllEntities() {
+        return countryRepository.findAll();
     }
 }

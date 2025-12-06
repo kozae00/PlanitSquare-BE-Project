@@ -1,6 +1,6 @@
 package com.example.planitsquarebeproject.domain.holiday.controller;
 
-import com.example.planitsquarebeproject.domain.holiday.entity.Holiday;
+import com.example.planitsquarebeproject.domain.holiday.dto.HolidayDto;
 import com.example.planitsquarebeproject.domain.holiday.service.HolidayService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,28 +22,28 @@ public class HolidayController {
 
     @Operation(summary = "공휴일 조회", description = "특정 연도와 국가의 공휴일을 조회합니다.")
     @GetMapping
-    public ResponseEntity<List<Holiday>> search(
+    public ResponseEntity<List<HolidayDto.Response>> search(
             @RequestParam int year,
             @RequestParam String country) {
-        List<Holiday> holidays = holidayService.search(year, country);
+        List<HolidayDto.Response> holidays = holidayService.search(year, country);
         return ResponseEntity.ok(holidays);
     }
 
     @Operation(summary = "기간별 공휴일 조회", description = "특정 기간의 공휴일을 조회합니다.")
     @GetMapping("/range")
-    public ResponseEntity<List<Holiday>> searchRange(
+    public ResponseEntity<List<HolidayDto.Response>> searchRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        List<Holiday> holidays = holidayService.searchBetween(from, to);
+        List<HolidayDto.Response> holidays = holidayService.searchBetween(from, to);
         return ResponseEntity.ok(holidays);
     }
 
     @Operation(summary = "공휴일 새로고침", description = "외부 API에서 공휴일 데이터를 다시 가져와 업데이트합니다.")
     @PostMapping("/refresh")
-    public ResponseEntity<List<Holiday>> refresh(
+    public ResponseEntity<List<HolidayDto.Response>> refresh(
             @RequestParam int year,
             @RequestParam String country) {
-        List<Holiday> holidays = holidayService.loadHolidays(year, country);
+        List<HolidayDto.Response> holidays = holidayService.loadHolidays(year, country);
         return ResponseEntity.ok(holidays);
     }
 

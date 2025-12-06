@@ -1,6 +1,6 @@
 package com.example.planitsquarebeproject.domain.country.controller;
 
-import com.example.planitsquarebeproject.domain.country.entity.Country;
+import com.example.planitsquarebeproject.domain.country.dto.CountryDto;
 import com.example.planitsquarebeproject.domain.country.service.CountryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,22 +20,22 @@ public class CountryController {
 
     @Operation(summary = "국가 데이터 로드", description = "외부 API에서 국가 데이터를 가져와 저장합니다.")
     @PostMapping("/load")
-    public ResponseEntity<List<Country>> load() {
-        List<Country> countries = countryService.loadAllCountries();
+    public ResponseEntity<List<CountryDto.Response>> load() {
+        List<CountryDto.Response> countries = countryService.loadAllCountries();
         return ResponseEntity.ok(countries);
     }
 
     @Operation(summary = "전체 국가 조회", description = "데이터베이스에 저장된 모든 국가를 조회합니다.")
     @GetMapping
-    public ResponseEntity<List<Country>> findAll() {
-        List<Country> countries = countryService.getAll();
+    public ResponseEntity<List<CountryDto.Response>> findAll() {
+        List<CountryDto.Response> countries = countryService.getAll();
         return ResponseEntity.ok(countries);
     }
 
     @Operation(summary = "국가 코드로 조회", description = "특정 국가 코드로 국가를 조회합니다.")
     @GetMapping("/{countryCode}")
-    public ResponseEntity<Country> findByCode(@PathVariable String countryCode) {
-        Country country = countryService.getByCode(countryCode);
+    public ResponseEntity<CountryDto.Response> findByCode(@PathVariable String countryCode) {
+        CountryDto.Response country = countryService.getByCode(countryCode);
         return ResponseEntity.ok(country);
     }
 }

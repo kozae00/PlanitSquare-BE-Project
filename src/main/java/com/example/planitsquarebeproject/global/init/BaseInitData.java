@@ -25,10 +25,13 @@ public class BaseInitData implements CommandLineRunner {
         try {
             // 1. 국가 데이터 로드
             log.info("국가 데이터 로딩 중...");
-            List<Country> countries = countryService.loadAllCountries();
+            countryService.loadAllCountries();
+            
+            // 2. 로드된 국가 엔티티 조회
+            List<Country> countries = countryService.getAllEntities();
             log.info("국가 데이터 로딩 완료: {} 개국", countries.size());
             
-            // 2. 공휴일 데이터 로드
+            // 3. 공휴일 데이터 로드
             log.info("공휴일 데이터 로딩 중...");
             holidayService.loadInitialData(countries);
             log.info("공휴일 데이터 로딩 완료");
