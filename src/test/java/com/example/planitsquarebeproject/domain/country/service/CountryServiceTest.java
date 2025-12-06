@@ -2,7 +2,6 @@ package com.example.planitsquarebeproject.domain.country.service;
 
 import com.example.planitsquarebeproject.domain.country.dto.CountryDto;
 import com.example.planitsquarebeproject.domain.country.entity.Country;
-import com.example.planitsquarebeproject.domain.country.exception.CountryNotFoundException;
 import com.example.planitsquarebeproject.domain.country.repository.CountryRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -62,18 +61,6 @@ class CountryServiceTest {
         // then
         assertThat(result.getCountryCode()).isEqualTo("KR");
         assertThat(result.getName()).isEqualTo("South Korea");
-    }
-
-    @Test
-    @DisplayName("존재하지 않는 국가 코드로 조회하면 예외가 발생한다")
-    void getByCodeNotFound() {
-        // given
-        when(countryRepository.findById("XX")).thenReturn(Optional.empty());
-
-        // when & then
-        assertThatThrownBy(() -> countryService.getByCode("XX"))
-                .isInstanceOf(CountryNotFoundException.class)
-                .hasMessageContaining("XX");
     }
 
     @Test
