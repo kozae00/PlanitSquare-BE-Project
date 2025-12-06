@@ -1,0 +1,29 @@
+# 테스트 환경 설정
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: false # 테스트 시 SQL 로그 끄기
+
+  # 초기 데이터 로드 비활성화
+  main:
+    allow-bean-definition-overriding: true
+
+logging:
+  level:
+    org.springframework.test: INFO
+    org.hibernate: INFO
+
+# Swagger 설정은 테스트에서 불필요하므로 최소화
+springdoc:
+  swagger-ui:
+    enabled: false
